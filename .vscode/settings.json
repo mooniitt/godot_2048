@@ -1,0 +1,13 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^command -v godot \\|\\| command -v godot4 \\|\\| true$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^command -v godot \\|\\| command -v godot4 \\|\\| ls /Applications \\| grep -i godot \\|\\| true$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    },
+    "godotTools.editorPath.godot4": "/Users/mit-xl/Downloads/chrome-download/Godot.app"
+}
