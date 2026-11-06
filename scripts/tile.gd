@@ -22,6 +22,7 @@ var panel: Panel
 var label: Label
 var style_box: StyleBoxFlat
 var current_tween: Tween
+var sprite: TextureRect
 
 func _init() -> void:
 	custom_minimum_size = Vector2(80, 80)
@@ -37,6 +38,13 @@ func _init() -> void:
 	style_box.corner_detail = 8
 	panel.add_theme_stylebox_override("panel", style_box)
 	add_child(panel)
+
+	sprite = TextureRect.new()
+	sprite.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	sprite.stretch_mode = TextureRect.STRETCH_SCALE
+	sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(sprite)
 
 	label = Label.new()
 	label.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -67,6 +75,16 @@ func setup(val: int, tile_size: Vector2) -> void:
 	
 	var col_info = COLORS.get(val, {"bg": Color("3c3a32"), "text": Color("ffffff")})
 	style_box.bg_color = col_info["bg"]
+	var sprite_path := "res://assets/tiles/tile_%d.png" % val
+	if ResourceLoader.exists(sprite_path):
+		sprite.texture = load(sprite_path)
+		sprite.visible = true
+		panel.visible = false
+		label.visible = false
+	else:
+		sprite.visible = false
+		panel.visible = true
+		label.visible = true
 	
 	# 如果达到 2048 及以上，添加华丽的金色边框高光
 	if val >= 2048:

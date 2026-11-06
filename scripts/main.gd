@@ -279,29 +279,44 @@ func handle_move(dir: Vector2i) -> void:
 				tile_map[from_pos.x][from_pos.y] = null
 	
 	# 创建滑动结束定时器
-	get_tree().create_timer(ANIM_DURATION).timeout.connect(func():
-		# 动画完成后按逻辑棋盘重建节点和映射，清掉移动过程中留下的旧方块引用。
-		clear_all_tiles()
-		for r in range(4):
-			for c in range(4):
-				var value: int = logic.grid[r][c]
-				if value == 0:
-					continue
-				var tile = create_tile_at(r, c, value, false)
-				if merged_targets.has(Vector2i(r, c)):
-					tile.play_merge_pop()
-			
-		update_score_ui()
-		save_best_score()
-		
-		# 动画结束后再显示胜利或失败提示，避免遮挡移动效果。
-		if res.get("newly_won", false):
-			show_win_overlay()
-		elif res.get("game_over", false):
-			show_game_over_overlay()
-			
-		is_animating = false
-	)
+	get_tree().create_timer(ANIM_DURATION).timeout.connect(func(): _complete_move(res, merged_targets))
+
+func _complete_move(res: Dictionary, merged_targets: Dictionary) -> void:
+	# 逐目标播放 12 帧融合特效，完成后再恢复方块显示。
+	for merge_pos in merged_targets.keys():
+		await _play_merge_effect(merge_pos)
+
+	clear_all_tiles()
+	for r in range(4):
+		for c in range(4):
+			var value: int = logic.grid[r][c]
+			if value == 0:
+				continue
+			create_tile_at(r, c, value, false)
+
+	update_score_ui()
+	save_best_score()
+	if res.get("newly_won", false):
+		show_win_overlay()
+	elif res.get("game_over", false):
+		show_game_over_overlay()
+	is_animating = false
+
+func _play_merge_effect(cell: Vector2i) -> void:
+	var effect := TextureRect.new()
+	effect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	effect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	effect.stretch_mode = TextureRect.STRETCH_SCALE
+	effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	effect.z_index = 20
+	var effect_size := Vector2(cell_size * 2.4, cell_size * 2.4)
+	effect.size = effect_size
+	effect.position = get_cell_pos(cell.x, cell.y) + Vector2(cell_size, cell_size) / 2.0 - effect_size / 2.0
+	tiles_layer.add_child(effect)
+	for frame_index in range(1, 13):
+		effect.texture = load("res://assets/merge_fx/frame_%02d.png" % frame_index)
+		await get_tree().create_timer(0.055).timeout
+	effect.queue_free()
 
 func show_game_over_overlay() -> void:
 	# 显示无路可走时的结束面板。
