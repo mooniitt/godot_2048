@@ -280,23 +280,16 @@ func handle_move(dir: Vector2i) -> void:
 	
 	# 创建滑动结束定时器
 	get_tree().create_timer(ANIM_DURATION).timeout.connect(func():
-		# 销毁被合并的旧方块，并生成新数值方块
-		for to_pos in merged_targets.keys():
-			var old_tiles = merged_targets[to_pos]
-			for ot in old_tiles:
-				if is_instance_valid(ot):
-					if ot.get_parent() == tiles_layer:
-						tiles_layer.remove_child(ot)
-					ot.queue_free()
-			var new_val = logic.grid[to_pos.x][to_pos.y]
-			var new_tile = create_tile_at(to_pos.x, to_pos.y, new_val, false)
-			new_tile.play_merge_pop()
-			
-		# 处理新方块生成
-		var spawn_info = res["spawn"]
-		if not spawn_info.is_empty():
-			var sp_pos = spawn_info["pos"]
-			create_tile_at(sp_pos.x, sp_pos.y, spawn_info["val"], true)
+		# 动画完成后按逻辑棋盘重建节点和映射，清掉移动过程中留下的旧方块引用。
+		clear_all_tiles()
+		for r in range(4):
+			for c in range(4):
+				var value: int = logic.grid[r][c]
+				if value == 0:
+					continue
+				var tile = create_tile_at(r, c, value, false)
+				if merged_targets.has(Vector2i(r, c)):
+					tile.play_merge_pop()
 			
 		update_score_ui()
 		save_best_score()
