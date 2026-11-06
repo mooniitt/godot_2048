@@ -4,6 +4,7 @@ extends Control
 # preload：预加载脚本文件，返回可通过 new() 创建实例的类引用。
 const GameLogicClass = preload("res://scripts/game_logic.gd")
 const TileClass = preload("res://scripts/tile.gd")
+const MERGE_SHEET: Texture2D = preload("res://assets/merge_fx/merge_sheet.png")
 
 # const：声明常量；类型标注格式为“名称: 类型”。
 # user:// 指向 Godot 为当前游戏提供的用户数据目录。
@@ -314,7 +315,13 @@ func _play_merge_effect(cell: Vector2i) -> void:
 	effect.position = get_cell_pos(cell.x, cell.y) + Vector2(cell_size, cell_size) / 2.0 - effect_size / 2.0
 	tiles_layer.add_child(effect)
 	for frame_index in range(1, 13):
-		effect.texture = load("res://assets/merge_fx/frame_%02d.png" % frame_index)
+		var atlas_frame := AtlasTexture.new()
+		atlas_frame.atlas = MERGE_SHEET
+		var frame_column := (frame_index - 1) % 4
+		var frame_row := floori(float(frame_index - 1) / 4.0)
+		var frame_size := Vector2(MERGE_SHEET.get_width() / 4.0, MERGE_SHEET.get_height() / 3.0)
+		atlas_frame.region = Rect2(Vector2(frame_column, frame_row) * frame_size, frame_size)
+		effect.texture = atlas_frame
 		await get_tree().create_timer(0.055).timeout
 	effect.queue_free()
 
